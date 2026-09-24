@@ -1,8 +1,42 @@
 # 🎬 Cinematic Director & Storyboard Creator
 
-An intelligent, autonomous AI Movie Director agent built with Google ADK (Agent Development Kit). The agent assists filmmakers, directors, and cinematographers in scene planning, camera rig calculations, visual 16:9 storyboard frame generation, animated video preview creation, and shot list curation.
+[![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Vertex%20AI-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/vertex-ai)
+[![Framework](https://img.shields.io/badge/Framework-Google%20ADK%20%28Agent%20Development%20Kit%29-34A853)](https://github.com/google/adk)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Cloud Run](https://img.shields.io/badge/Deployed%20on-Cloud%20Run-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/run)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+An intelligent, autonomous AI Movie Director agent built with **Google ADK (Agent Development Kit)**. The agent assists filmmakers, directors, and cinematographers in scene planning, camera rig calculations, visual 16:9 storyboard frame generation, animated video preview creation, and shot list curation.
 
 ![Cinematic Director Demo](./demo.gif)
+
+---
+
+## 🌐 Live Application Deployment
+
+- **Cloud Run Service URL**: [https://cinematic-director-frontend-419786518315.us-east1.run.app](https://cinematic-director-frontend-419786518315.us-east1.run.app)
+- **Vertex AI Agent Engine Resource**: `projects/419786518315/locations/us-east1/reasoningEngines/3088125741167017984`
+
+---
+
+## 📊 System Architecture
+
+```mermaid
+flowchart TD
+    User([👤 Director / User]) <--> WebUI[🎬 Dark Slate Web UI]
+    WebUI <--> Proxy[⚡ FastAPI Proxy / Cloud Run]
+    Proxy <--> AgentEngine[🤖 Vertex AI Agent Engine / ReasoningEngine]
+    
+    subgraph Agent Tools & Google Cloud Services
+        AgentEngine <--> Model[🧠 Gemini 2.5 Flash]
+        AgentEngine <--> ImageGen[🎨 Gemini 3.1 Flash Lite Image]
+        AgentEngine <--> VideoGen[🎥 Gemini Omni Flash Preview]
+        AgentEngine <--> DoF[📷 Python DoF Calculator Engine]
+        AgentEngine <--> Firestore[(🔥 Cloud Firestore\ncinematic-director-db)]
+        AgentEngine <--> Memory[(🧠 Vertex AI Memory Bank)]
+        AgentEngine <--> GCS[(☁️ Cloud Storage\ncinematic-storyboards-bucket)]
+    end
+```
 
 ---
 
@@ -35,6 +69,20 @@ This repository implements the following production features wired directly to G
 
 ### 7. 🃏 A2UI Rich Card Rendering (v0.8 Catalog)
 - **Structured UI Surfaces**: Generates structured A2UI JSON components (`Card`, `Column`, `Row`, `Text`, `Image`) rendered safely by the custom FastAPI/HTML/CSS web frontend.
+
+---
+
+## 🔌 Agent Tools API Reference
+
+| Tool Name | Parameters | Description | Output |
+| :--- | :--- | :--- | :--- |
+| `list_storyboard_shots` | `limit: int = 20` | Fetches saved scene shots from Cloud Firestore | JSON list of shots |
+| `get_storyboard_shot` | `shot_id: str` | Retrieves a specific storyboard shot by ID | Shot details object |
+| `save_storyboard_shot` | `scene_number`, `shot_type`, `camera_angle`, `description` | Saves a new shot composition to Cloud Firestore | Confirmation message & Shot ID |
+| `calculate_depth_of_field` | `focal_length_mm`, `aperture_f_number`, `subject_distance_ft`, `sensor_format` | Computes optical DoF, hyperfocal distance & focus limits | Formatted optical report |
+| `search_cinematic_references` | `query` | Searches film metadata and director camera techniques | Cinematic references list |
+| `generate_storyboard_image` | `prompt`, `tool_context` | Generates 16:9 storyboard frame via Vertex AI image model | Public GCS HTTPS URL & Artifact |
+| `generate_cinematic_video` | `prompt`, `tool_context` | Generates 16:9 animated video clip via `gemini-omni-flash-preview` | Public GCS HTTPS URL & Artifact |
 
 ---
 
@@ -73,7 +121,7 @@ This repository implements the following production features wired directly to G
 ### 1. Environment Configuration
 Set your GCP environment variables:
 ```bash
-export GCP_PROJECT_ID="your-gcp-project-id"
+export GCP_PROJECT_ID="qwiklabs-gcp-03-ef01b95861de"
 export GOOGLE_GENAI_USE_VERTEXAI="true"
 export GOOGLE_CLOUD_LOCATION="us-east1"
 ```
@@ -88,7 +136,7 @@ agents-cli run
 To start the FastAPI proxy and dark-themed director frontend web server:
 ```bash
 cd frontend
-export AGENT_ENGINE_RESOURCE_NAME="projects/<project-id>/locations/us-east1/reasoningEngines/<engine-id>"
+export AGENT_ENGINE_RESOURCE_NAME="projects/419786518315/locations/us-east1/reasoningEngines/3088125741167017984"
 export AGENT_DIRECTORY="app"
 export PORT=8080
 
@@ -103,7 +151,7 @@ Open your browser to port `8080` to interact with the frontend interface.
 ### Deploy Agent to Agent Runtime
 Deploy the ADK agent to Vertex AI Agent Engine:
 ```bash
-agents-cli deploy --project your-gcp-project-id --no-confirm-project
+agents-cli deploy --project qwiklabs-gcp-03-ef01b95861de --no-confirm-project
 ```
 
 ### Deploy Frontend to Cloud Run
@@ -111,8 +159,8 @@ Deploy the web server frontend to Cloud Run:
 ```bash
 gcloud run deploy cinematic-director-frontend \
   --source ./frontend \
-  --project your-gcp-project-id \
+  --project qwiklabs-gcp-03-ef01b95861de \
   --region us-east1 \
-  --set-env-vars AGENT_ENGINE_RESOURCE_NAME="projects/<project-id>/locations/us-east1/reasoningEngines/<engine-id>",AGENT_DIRECTORY="app" \
+  --set-env-vars AGENT_ENGINE_RESOURCE_NAME="projects/419786518315/locations/us-east1/reasoningEngines/3088125741167017984",AGENT_DIRECTORY="app" \
   --allow-unauthenticated
 ```
